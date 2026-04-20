@@ -13,20 +13,10 @@ import adminRoutes from "./routes/adminRoutes.js";
 import maintenanceRoutes from "./routes/maintenanceRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 
-
-
 dotenv.config();
 
 const app = express();
 
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    credentials: true
-  })
-);
-app.use(express.json());
-app.use(morgan("dev"));
 app.use(
   cors({
     origin: [
@@ -36,6 +26,9 @@ app.use(
     credentials: true
   })
 );
+
+app.use(express.json());
+app.use(morgan("dev"));
 
 app.get("/", (req, res) => {
   res.json({ message: "Vehicle Rental API running" });
@@ -49,7 +42,6 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/maintenance", maintenanceRoutes);
-
 
 app.use(notFound);
 app.use(errorHandler);
