@@ -27,6 +27,15 @@ app.use(
 );
 app.use(express.json());
 app.use(morgan("dev"));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://online-vehicle-rental-frontend.netlify.app"
+    ],
+    credentials: true
+  })
+);
 
 app.get("/", (req, res) => {
   res.json({ message: "Vehicle Rental API running" });
