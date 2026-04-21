@@ -17,14 +17,12 @@ dotenv.config();
 
 const app = express();
 
-
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://69e65bafceced5000877a088--online-vehicle-rental-frontend.netlify.app"
-  ],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(morgan("dev"));
 

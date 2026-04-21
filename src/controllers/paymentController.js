@@ -86,24 +86,7 @@ export const verifyRazorpayPayment = async (req, res) => {
       return res.status(404).json({ message: "Payment record not found" });
     }
 
-    if (isTestBypass) {
-      payment.razorpayPaymentId = razorpay_payment_id || "test_payment_id";
-      payment.razorpaySignature = razorpay_signature || "test_signature";
-      payment.status = "captured";
-      await payment.save();
 
-      booking.paymentStatus = "paid";
-      booking.bookingStatus = "confirmed";
-      await booking.save();
-
-      await sendBookingConfirmation(booking);
-
-      return res.json({
-        success: true,
-        message: "Payment verified successfully (test mode)",
-        payment
-      });
-    }
 
     const body = `${razorpay_order_id}|${razorpay_payment_id}`;
     const expectedSignature = crypto
