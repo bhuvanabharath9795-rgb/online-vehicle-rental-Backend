@@ -2,8 +2,6 @@ import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import generateToken from "../utils/generateToken.js";
 
-
-
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password, phone, address } = req.body;
@@ -31,13 +29,20 @@ export const registerUser = async (req, res) => {
       address,
     });
 
+    const token = generateToken(user._id);
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
+
     return res.status(201).json({
       message: "User registered successfully",
       _id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
-      token: generateToken(user._id),
     });
   } catch (error) {
     console.error("Register error:", error);
@@ -60,15 +65,22 @@ export const loginUser = async (req, res) => {
     return res.status(401).json({ message: "Invalid credentials" });
   }
 
+  const token = generateToken(user._id);
+
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+  });
+
   res.json({
-    message : "Login successful",
+    message: "Login successful",
     _id: user._id,
     name: user.name,
     email: user.email,
     phone: user.phone,
     address: user.address,
     role: user.role,
-    token: generateToken(user._id)
   });
 };
 

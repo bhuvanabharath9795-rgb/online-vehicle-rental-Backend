@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import morgan from "morgan";
 
 import authRoutes from "./routes/authRoutes.js";
@@ -15,21 +16,25 @@ import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 
 dotenv.config();
 
+
+
 const app = express();
 
-const cors = require("cors");
+
+
 
 app.use(
   cors({
     origin: [
-      "http://localhost:5173", // local dev
-      "http://online-vehicle-rental.vercel.app"
+      "http://localhost:5173",
+      "https://your-project-name.vercel.app" 
     ],
     credentials: true
   })
 );
 app.use(express.json());
 app.use(morgan("dev"));
+app.use(cookieParser());
 
 app.get("/", (req, res) => {
   res.json({ message: "Vehicle Rental API running" });
