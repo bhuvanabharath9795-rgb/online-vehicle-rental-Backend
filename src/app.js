@@ -22,12 +22,12 @@ const app = express();
 
 
 
-
 app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://your-project-name.vercel.app" 
+      "https://online-vehicle-rental-frontend-cg6rmbmog.vercel.app",
+      "https://online-vehicle-rental-frontend.vercel.app"
     ],
     credentials: true
   })
