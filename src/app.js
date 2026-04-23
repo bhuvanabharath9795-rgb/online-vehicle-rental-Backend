@@ -16,22 +16,19 @@ import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 
 dotenv.config();
 
-
-
 const app = express();
-
-
 
 app.use(
   cors({
     origin: [
       "http://localhost:5173",
       "https://online-vehicle-rental-frontend-cg6rmbmog.vercel.app",
-      "https://online-vehicle-rental-frontend.vercel.app"
+      "https://online-vehicle-rental-frontend.vercel.app",
     ],
-    credentials: true
+    credentials: true,
   })
 );
+
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(cookieParser());

@@ -27,6 +27,7 @@ export const registerUser = async (req, res) => {
       password: hashedPassword,
       phone,
       address,
+      
     });
 
     const token = generateToken(user._id);
@@ -37,13 +38,15 @@ export const registerUser = async (req, res) => {
       sameSite: "none",
     });
 
-    return res.status(201).json({
-      message: "User registered successfully",
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    });
+ return res.status(201).json({
+  message: "User registered successfully",
+  _id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  token,   
+});
+
   } catch (error) {
     console.error("Register error:", error);
     return res.status(500).json({
@@ -51,7 +54,6 @@ export const registerUser = async (req, res) => {
     });
   }
 };
-
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
@@ -67,22 +69,16 @@ export const loginUser = async (req, res) => {
 
   const token = generateToken(user._id);
 
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "none",
-  });
-
   res.json({
     message: "Login successful",
     _id: user._id,
     name: user.name,
     email: user.email,
-    phone: user.phone,
-    address: user.address,
     role: user.role,
+    token,   
   });
 };
+
 
 export const getProfile = async (req, res) => {
   res.json(req.user);

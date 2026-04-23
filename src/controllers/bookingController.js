@@ -1,6 +1,8 @@
+import { generateInvoice } from "../utils/generateInvoice.js";
 import Booking from "../models/Booking.js";
+
 import Vehicle from "../models/Vehicle.js";
-import sendEmail from "../utils/sendEmail.js";
+import { sendEmail } from "../utils/sendEmail.js";
 import mongoose from "mongoose";
 import { calculateAmount, calculateDays } from "../utils/calculateBookingAmount.js";
 
@@ -53,6 +55,21 @@ export const createBooking = async (req, res) => {
     totalDays,
     totalAmount
   });
+  const fullBooking = await Booking.findById(booking._id)
+  .populate("user")
+  .populate("vehicle");
+
+  await sendEmail(
+  fullBooking.user.email,
+  "Booking Confirmed 🚗",
+  `
+    <h2>Your booking is confirmed!</h2>
+    <p><b>Vehicle:</b> ${booking.vehicle.name || fullBooking.vehicle.model}</p>
+    <p><b>From:</b> ${booking.startDate}</p>
+    <p><b>To:</b> ${booking.endDate}</p>
+    <p><b>Amount:</b> ₹${booking.totalAmount}</p>
+  `
+);
 
   res.status(201).json(booking);
 };
@@ -145,7 +162,7 @@ export const updateBooking = async (req, res) => {
     booking.bookingStatus = "cancelled";
     await booking.save();
 
-    /*try {
+    try {
       await sendEmail({
         to: booking.user.email,
         subject: "Booking Cancelled",
@@ -153,7 +170,7 @@ export const updateBooking = async (req, res) => {
       });
     } catch (emailError) {
       console.log("Email failed:", emailError);
-    }*/
+    }
 
     return res.json({ message: "Booking cancelled" });
   } catch (error) {
@@ -178,5 +195,31 @@ export const sendBookingConfirmation = async (booking) => {
     });
   } catch (error) {
     console.log("Booking confirmation email failed:", error.message);
+  }
+};export const downloadInvoice = async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate("user")
+      .populate("vehicle");
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    const bookingUserId =
+      booking.user?._id?.toString?.() || booking.user?.toString?.();
+    const requestUserId = req.user?._id?.toString?.();
+    const isAdmin = req.user?.role === "admin";
+
+    if (bookingUserId !== requestUserId && !isAdmin) {
+      return res.status(403).json({ message: "Not allowed" });
+    }
+
+    generateInvoice(res, booking);
+  } catch (error) {
+    console.log("downloadInvoice error:", error);
+    return res.status(500).json({
+      message: error.message || "Failed to generate invoice",
+    });
   }
 };
