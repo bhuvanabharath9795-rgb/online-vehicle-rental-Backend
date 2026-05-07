@@ -1,4 +1,4 @@
-import User from "../models/user.js";
+import User from "../models/User.js";
 import Vehicle from "../models/vehicle.js";
 import Booking from "../models/booking.js";
 
