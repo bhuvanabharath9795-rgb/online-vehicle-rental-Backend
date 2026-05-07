@@ -1,5 +1,5 @@
 import User from "../models/User.js";
-import Vehicle from "../models/vehicle.js";
+import Vehicle from "../models/Vehicle.js";
 import Booking from "../models/booking.js";
 
 export const getAdminStats = async (req, res) => {

@@ -1,4 +1,4 @@
-import VehicleController from "../models/Vehicle.js";
+import Vehicle from "../models/Vehicle.js";
 import MaintenanceRecord from "../models/MaintenanceRecord.js";
 import Review from "../models/Review.js";
 
