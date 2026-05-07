@@ -18,16 +18,16 @@ dotenv.config();
 
 const app = express();
 
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://online-vehicle-rental-frontend-cg6rmbmog.vercel.app",
-      "https://online-vehicle-rental-frontend.vercel.app",
-    ],
-    credentials: true,
-  })
-);
+import cors from "cors";
+
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://online-vehicle-rental-frontend-qbywx736f.vercel.app",
+    "https://online-vehicle-rental-frontend.vercel.app"
+  ],
+  credentials: true
+}));
 
 app.use(express.json());
 app.use(morgan("dev"));
