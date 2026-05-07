@@ -18,6 +18,16 @@ const vehicleSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    fuelType: {
+      type: String,
+    },
+    transmission: {
+      type: String,
+    },
+    seats: {
+      type: Number,
+    },
+
     location: {
       type: String,
       required: true,
@@ -39,10 +49,10 @@ const vehicleSchema = new mongoose.Schema(
       required: true,
     },
     status: {
-  type: String,
-  enum: ["pending", "approved"],
-  default: "approved"
-},
+       type: String,
+       enum: ["pending", "approved"],
+       default: "approved"
+    },
     maintenanceRecords: [
       {
         title: String,
@@ -57,7 +67,4 @@ const vehicleSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
-const Vehicle = mongoose.model("Vehicle", vehicleSchema);
-
-export default Vehicle;
+export default mongoose.models.Vehicle || mongoose.model("Vehicle", vehicleSchema);

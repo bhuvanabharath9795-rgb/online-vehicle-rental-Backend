@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import User from "../models/User.js";
+import User from "../models/user.js";
 
 export const protect = async (req, res, next) => {
   try {
@@ -16,13 +16,16 @@ export const protect = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("-password");
 
-    if (!user) {
+    const loggedUser = await User.findById(
+      decoded.id || decoded._id || decoded.userId
+    ).select("-password");
+
+    if (!loggedUser) {
       return res.status(401).json({ message: "User not found" });
     }
 
-    req.user = user;
+    req.user = loggedUser;
     next();
   } catch (error) {
     return res.status(401).json({ message: "Invalid token" });

@@ -1,73 +1,119 @@
-import User from "../models/User.js";
-import Vehicle from "../models/Vehicle.js";
-import Booking from "../models/Booking.js";
-import Payment from "../models/Payment.js";
-import Review from "../models/Review.js";
+import User from "../models/user.js";
+import Vehicle from "../models/vehicle.js";
+import Booking from "../models/booking.js";
 
-export const getAdminDashboard = async (req, res) => {
-  const [
-    usersCount,
-    vehiclesCount,
-    bookingsCount,
-    payments,
-    pendingVehicles,
-    pendingReviews,
-    recentBookings
-  ] = await Promise.all([
-    User.countDocuments(),
-    Vehicle.countDocuments(),
-    Booking.countDocuments(),
-    Payment.find().sort({ createdAt: -1 }).limit(10).populate("user", "name email"),
-    Vehicle.find({ status: "pending" }).sort({ createdAt: -1 }),
-    Review.find({ status: "pending" }).sort({ createdAt: -1 }).populate("user vehicle"),
-    Booking.find().sort({ createdAt: -1 }).limit(10).populate("vehicle user")
-  ]);
+export const getAdminStats = async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const totalVehicles = await Vehicle.countDocuments();
+    const totalBookings = await Booking.countDocuments();
 
-  const revenue = payments.reduce((sum, item) => sum + (item.status === "captured" ? item.amount : 0), 0);
+    const bookings = await Booking.find();
 
-  res.json({
-    stats: { usersCount, vehiclesCount, bookingsCount, revenue },
-    pendingVehicles,
-    pendingReviews,
-    recentBookings,
-    payments
-  });
-};
+    const totalRevenue = bookings.reduce(
+      (sum, b) => sum + (b.totalAmount || 0),
+      0
+    );
 
-export const getAllUsers = async (req, res) => {
-  const users = await User.find().select("-password").sort({ createdAt: -1 });
-  res.json(users);
-};
-
-export const updateVehicleStatus = async (req, res) => {
-  const vehicle = await Vehicle.findById(req.params.id);
-  if (!vehicle) {
-    return res.status(404).json({ message: "Vehicle not found" });
+    res.json({
+      totalUsers,
+      totalVehicles,
+      totalBookings,
+      totalRevenue,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch stats" });
   }
-
-  vehicle.status = req.body.status;
-  await vehicle.save();
-
-  res.json(vehicle);
 };
 
 export const completeBooking = async (req, res) => {
-  const booking = await Booking.findById(req.params.id);
-  if (!booking) {
-    return res.status(404).json({ message: "Booking not found" });
+  try {
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    booking.bookingStatus = "completed";
+    await booking.save();
+
+    res.json({ message: "Booking marked as completed", booking });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to complete booking" });
   }
+};
 
-  booking.bookingStatus = "completed";
-  await booking.save();
+export const getAdminDashboard = async (req, res) => {
+  try {
+    const usersCount = await User.countDocuments();
+    const vehiclesCount = await Vehicle.countDocuments();
+    const bookingsCount = await Booking.countDocuments();
 
-  res.json(booking);
+    const paidBookings = await Booking.find({ paymentStatus: "paid" });
+    const revenue = paidBookings.reduce(
+      (sum, booking) => sum + (booking.totalAmount || 0),
+      0
+    );
+
+    const pendingVehicles = await Vehicle.find({ status: "pending" }).limit(10);
+
+    const recentBookings = await Booking.find()
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate("user", "name email")
+      .populate("vehicle");
+
+    res.json({
+      stats: {
+        usersCount,
+        vehiclesCount,
+        bookingsCount,
+        revenue,
+      },
+      pendingVehicles,
+      pendingReviews: [],
+      recentBookings,
+    });
+  } catch (error) {
+    console.log("getAdminDashboard error:", error);
+    res.status(500).json({ message: "Failed to load admin dashboard" });
+  }
+};
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().select("-password");
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to load users" });
+  }
+};
+
+export const updateVehicleStatus = async (req, res) => {
+  try {
+    const vehicle = await Vehicle.findById(req.params.id);
+
+    if (!vehicle) {
+      return res.status(404).json({ message: "Vehicle not found" });
+    }
+
+    vehicle.status = req.body.status;
+    await vehicle.save();
+
+    res.json({ message: "Vehicle status updated", vehicle });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update vehicle status" });
+  }
 };
 
 export const rentalHistoryReport = async (req, res) => {
-  const bookings = await Booking.find({ vehicle: req.params.vehicleId })
-    .populate("user", "name email")
-    .populate("vehicle", "title make model")
-    .sort({ createdAt: -1 });
+  try {
+    const bookings = await Booking.find()
+      .sort({ createdAt: -1 })
+      .populate("user", "name email")
+      .populate("vehicle");
 
-  res.json(bookings);
+    res.json(bookings);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to load rental history" });
+  }
 };

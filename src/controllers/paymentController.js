@@ -3,6 +3,8 @@ import Booking from "../models/Booking.js";
 import Payment from "../models/Payment.js";
 import razorpay from "../config/razorpay.js";
 import { sendBookingConfirmation } from "./bookingController.js";
+import PDFDocument from "pdfkit";
+import { generateInvoice } from "../utils/generateInvoice.js";
 export const createRazorpayOrder = async (req, res) => {
   try {
     const { bookingId } = req.body;
@@ -138,28 +140,32 @@ export const getMyPayments = async (req, res) => {
 };
 
 export const getInvoiceByBooking = async (req, res) => {
-  const payment = await Payment.findOne({ booking: req.params.bookingId })
-    .populate("user", "name email")
-    .populate({
-      path: "booking",
-      populate: { path: "vehicle" }
+  try {
+    const payment = await Payment.findOne({ booking: req.params.bookingId })
+      .populate("user", "name email")
+      .populate({
+        path: "booking",
+        populate: { path: "vehicle" },
+      });
+
+    if (!payment) {
+      return res.status(404).json({ message: "Invoice not found" });
+    }
+
+    if (
+      String(payment.user._id) !== String(req.user._id) &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({ message: "Not allowed" });
+    }
+
+    generateInvoice(res, payment.booking);
+  } catch (error) {
+    console.log("getInvoiceByBooking error:", error);
+    return res.status(500).json({
+      message: "Failed to generate invoice",
     });
-
-  if (!payment) {
-    return res.status(404).json({ message: "Invoice not found" });
   }
-
-  if (String(payment.user._id) !== String(req.user._id) && req.user.role !== "admin") {
-    return res.status(403).json({ message: "Not allowed" });
-  }
-
-  res.json({
-    invoiceNumber: payment.invoiceNumber,
-    amount: payment.amount,
-    currency: payment.currency,
-    status: payment.status,
-    issuedAt: payment.createdAt,
-    customer: payment.user,
-    booking: payment.booking
-  });
 };
+
+
